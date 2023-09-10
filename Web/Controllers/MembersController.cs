@@ -35,5 +35,24 @@ namespace Heuristics.TechEval.Web.Controllers {
 
 			return Json(JsonConvert.SerializeObject(newMember));
 		}
+
+		[HttpPost]
+		public ActionResult Edit(Member data, int id)
+		{
+			Member member = _context.Members.Find(id);
+
+			if (member == null)
+			{
+				return new HttpStatusCodeResult(400, "Member not found");
+			}
+
+			member.Name = data.Name;
+			member.Email = data.Email;
+			member.LastUpdated = DateTime.Now;
+
+			_context.SaveChanges();
+
+			return Json(JsonConvert.SerializeObject(data));
+		}
 	}
 }
