@@ -46,7 +46,8 @@
                         <label for="Name">Member Name</label>
                         <input id="nameInput" type="text" class="form-control" name="Name" placeholder="John Smith" />
                         <h5 id="nameCheck"
-                            style="color: red;">
+                            style="color: red;"
+                            hidden="hidden">
                             **Name is missing
                         </h5>
                     </div>
@@ -54,8 +55,14 @@
                         <label for="Email">Email Address</label>
                         <input id="emailInput" type="email" class="form-control" name="Email" placeholder="you@awesome.com" />
                         <h5 id="emailCheck"
-                            style="color: red;">
+                            style="color: red;"
+                            hidden="hidden">
                             **Email is missing
+                        </h5>
+                        <h5 id="emailDuplicate"
+                            style="color: red;"
+                            hidden="hidden">
+                            **Email taken
                         </h5>
                     </div> 
                 </div>
@@ -77,15 +84,12 @@
             }
         });
 
-        $("#nameCheck").hide();
-        $("#emailCheck").hide();
-
         let isNameDirty = false;
         let isEmailDirty = false;
 
         $("#nameInput").keyup(function () {
             const nameValue = $("#nameInput").val();
-            let isNameDirty = validateInput(nameValue);
+            isNameDirty = validateInput(nameValue);
 
             $("#nameCheck").toggle(isNameDirty);
             $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
@@ -93,24 +97,29 @@
 
         $("#emailInput").keyup(function () {
             const emailValue = $("#emailInput").val();
-            let isEmailDirty = validateInput(emailValue);
+            isEmailDirty = validateEmail(emailValue);
 
-            $("#emailCheck").toggle(isEmailDirty);
             $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
         });
 
         function validateInput(inputedValue) {
-            let isDirty = false;
-
-            if (inputedValue == "") {
-                isDirty = true;
-            }
+            const isDirty = inputedValue == "";
 
             return isDirty;
         }
+
+        function validateEmail(email) {
+            var membersData = @Html.Raw(Json.Encode(Model));
+            const isDuplicate = membersData.some(member => email === member.Email);
+            const isEmptyString = validateInput(email);
+
+            $("#emailDuplicate").toggle(isDuplicate);
+            $("#emailCheck").toggle(isEmptyString);
+            return isEmptyString && isDuplicate;
+        }
     });
     $(document).on("click", ".edit-member-button", function () {
-        $("#MemberForm").attr("action", "/Members/Edit/" + this.dataset.memberId); 
+        $("#MemberForm").attr("action", "/Members/Edit/" + this.dataset.memberId);
         $("#MemberModal input[name='Name']").val(this.dataset.memberName);
         $("#MemberModal input[name='Email']").val(this.dataset.memberEmail);
     });
