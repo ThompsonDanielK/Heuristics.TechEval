@@ -44,7 +44,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="Name">Member Name</label>
-                        <input id="nameInput" type="text" class="form-control" id="Name" name="Name" placeholder="John Smith" />
+                        <input id="nameInput" type="text" class="form-control" name="Name" placeholder="John Smith" />
                         <h5 id="nameCheck"
                             style="color: red;">
                             **Name is missing
@@ -52,7 +52,7 @@
                     </div>
                     <div class="form-group">
                         <label for="Email">Email Address</label>
-                        <input id="emailInput" type="email" class="form-control" id="Email" name="Email" placeholder="you@awesome.com" />
+                        <input id="emailInput" type="email" class="form-control" name="Email" placeholder="you@awesome.com" />
                         <h5 id="emailCheck"
                             style="color: red;">
                             **Email is missing
@@ -61,7 +61,7 @@
                 </div>
                 <div class="modal-footer">
                     <input id="saveButton" type="submit" class="btn btn-primary" value="Save" />
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" disabled="true">Close</button>
                 </div>
             </div>
         </form>
@@ -77,46 +77,36 @@
             }
         });
 
-        $("#saveButton").prop('disabled', true);
         $("#nameCheck").hide();
         $("#emailCheck").hide();
 
+        let isNameDirty = false;
+        let isEmailDirty = false;
+
         $("#nameInput").keyup(function () {
             const nameValue = $("#nameInput").val();
-            let isDirty = false;
+            let isNameDirty = validateInput(nameValue);
 
-            if (nameValue == "") {
-                isDirty = true;
-                $("#nameCheck").show();
-            } else {
-                isDirty = false;
-                $("#nameCheck").hide();
-            }
-
-            validateForm(isDirty);
+            $("#nameCheck").toggle(isNameDirty);
+            $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
         });
 
         $("#emailInput").keyup(function () {
             const emailValue = $("#emailInput").val();
-            let isDirty = false;
+            let isEmailDirty = validateInput(emailValue);
 
-            if (emailValue == "") {
-                isDirty = true;
-                $("#emailCheck").show();
-            } else {
-                isDirty = false;
-                $("#emailCheck").hide();
-            }
-
-            validateForm(isDirty)
+            $("#emailCheck").toggle(isEmailDirty);
+            $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
         });
 
-        function validateForm(isDirty) {
-            if (isDirty) {
-                $("#saveButton").prop('disabled', true);
-            } else {
-                $("#saveButton").prop('disabled', false);
+        function validateInput(inputedValue) {
+            let isDirty = false;
+
+            if (inputedValue == "") {
+                isDirty = true;
             }
+
+            return isDirty;
         }
     });
     $(document).on("click", ".edit-member-button", function () {
