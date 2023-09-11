@@ -67,8 +67,8 @@
                     </div> 
                 </div>
                 <div class="modal-footer">
-                    <input id="saveButton" type="submit" class="btn btn-primary" value="Save" />
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" disabled="true">Close</button>
+                    <input id="saveButton" type="submit" class="btn btn-primary" value="Save" disabled/>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
                 </div>
             </div>
         </form>
@@ -76,6 +76,8 @@
 </div>
 
 <script type="text/javascript">
+    let activeDocumentId;
+
     $(document).ready(function () {
         $("#MemberForm").ajaxForm({
             success: function (formData, jqForm, options) {
@@ -110,23 +112,30 @@
 
         function validateEmail(email) {
             var membersData = @Html.Raw(Json.Encode(Model));
-            const isDuplicate = membersData.some(member => email === member.Email);
             const isEmptyString = validateInput(email);
+            const isDuplicate = membersData.some((member) => {
+                isExistingEmail = email?.toLowerCase() === member.Email.toLowerCase();
+                isDifferentId = member.Id != activeDocumentId;
+
+                return isExistingEmail && isDifferentId;
+            });
 
             $("#emailDuplicate").toggle(isDuplicate);
             $("#emailCheck").toggle(isEmptyString);
-            return isEmptyString && isDuplicate;
+            return isEmptyString || isDuplicate;
         }
     });
     $(document).on("click", ".edit-member-button", function () {
         $("#MemberForm").attr("action", "/Members/Edit/" + this.dataset.memberId);
         $("#MemberModal input[name='Name']").val(this.dataset.memberName);
         $("#MemberModal input[name='Email']").val(this.dataset.memberEmail);
+        activeDocumentId = this.dataset.memberId;
     });
     $(document).on("click", ".new-member-button", function () {
         $("#MemberModal")
         .resetForm()
-        .attr("action", "/Members/New");
+            .attr("action", "/Members/New");
+        activeDocumentId = undefined;
     });
 </script>
 
