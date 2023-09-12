@@ -22,37 +22,63 @@ namespace Heuristics.TechEval.Web.Controllers {
 			return View(allMembers);
 		}
 
-		[HttpPost]
-		public ActionResult New(NewMember data) {
-			var newMember = new Member {
-				Name = data.Name,
-				Email = data.Email,
-				LastUpdated = DateTime.Now
-			};
+        public ActionResult New(NewMember data)
+        {
+            bool isUnique = IsEmailUnique(data.Email);
+            if (!isUnique)
+            {
+                return new HttpStatusCodeResult(409, "Email is taken");
+            }
 
-			_context.Members.Add(newMember);
-			_context.SaveChanges();
+            var newMember = new Member
+            {
+                Name = data.Name,
+                Email = data.Email,
+                LastUpdated = DateTime.Now
+            };
 
-			return Json(JsonConvert.SerializeObject(newMember));
-		}
+            _context.Members.Add(newMember);
+            _context.SaveChanges();
 
-		[HttpPost]
-		public ActionResult Edit(Member data, int id)
-		{
-			Member member = _context.Members.Find(id);
+            return Json(JsonConvert.SerializeObject(newMember));
+        }
 
-			if (member == null)
+        [HttpPost]
+        public ActionResult Edit(Member data, int id)
+        {
+            Member member = _context.Members.Find(id);
+
+            if (member == null)
+            {
+                return new HttpStatusCodeResult(400, "Member not found");
+            }
+
+            bool isUnique = IsEmailUnique(data.Email);
+            if (!isUnique)
+            {
+                return new HttpStatusCodeResult(409, "Email is taken");
+            }
+
+
+            member.Name = data.Name;
+            member.Email = data.Email;
+            member.LastUpdated = DateTime.Now;
+
+            _context.SaveChanges();
+
+            return Json(JsonConvert.SerializeObject(data));
+        }
+
+        private bool IsEmailUnique(string email, int memberIdToExclude = 0)
+        {
+			if (memberIdToExclude == 0)
 			{
-				return new HttpStatusCodeResult(400, "Member not found");
+				return !_context.Members.Any(member => member.Email == email);
 			}
-
-			member.Name = data.Name;
-			member.Email = data.Email;
-			member.LastUpdated = DateTime.Now;
-
-			_context.SaveChanges();
-
-			return Json(JsonConvert.SerializeObject(data));
+			else
+			{
+				return !_context.Members.Any(member => member.Email == email && member.Id != memberIdToExclude);
+			}
 		}
 	}
 }

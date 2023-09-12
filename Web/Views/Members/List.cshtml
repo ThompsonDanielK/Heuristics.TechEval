@@ -45,30 +45,21 @@
                     <div class="form-group">
                         <label for="Name">Member Name</label>
                         <input id="nameInput" type="text" class="form-control" name="Name" placeholder="John Smith" />
-                        <h5 id="nameCheck"
-                            style="color: red;"
-                            hidden="hidden">
-                            **Name is missing
-                        </h5>
+                        
                     </div>
                     <div class="form-group">
                         <label for="Email">Email Address</label>
-                        <input id="emailInput" type="email" class="form-control" name="Email" placeholder="you@awesome.com" />
-                        <h5 id="emailCheck"
-                            style="color: red;"
-                            hidden="hidden">
-                            **Email is missing
-                        </h5>
-                        <h5 id="emailDuplicate"
-                            style="color: red;"
-                            hidden="hidden">
-                            **Email taken
-                        </h5>
+                        <input id="emailInput" type="email" class="form-control" name="Email" placeholder="you@awesome.com" />            
                     </div> 
                 </div>
                 <div class="modal-footer">
-                    <input id="saveButton" type="submit" class="btn btn-primary" value="Save" disabled/>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal" >Close</button>
+                    <div class="col-md-6">
+                        <h5 id="errorMessage" style="color: red; text-align: left;" hidden="hidden">**Name is missing</h5>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <input id="saveButton" type="submit" class="btn btn-primary" value="Save" disabled/>
+                        <button id="closeButton" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -80,10 +71,19 @@
 
     $(document).ready(function () {
         $("#MemberForm").ajaxForm({
+            error: function (error) {
+                if (error.status == 409) {
+                    $("#errorMessage").text("**" + error.statusText).toggle(true);
+                }
+            },
             success: function (formData, jqForm, options) {
                 // sure would be nice if we didn't have to reload the whole page...
                 document.location.reload();
             }
+        });
+
+        $("#closeButton").click(function () {
+            $("#errorMessage").toggle(false);
         });
 
         let isNameDirty = false;
@@ -91,39 +91,24 @@
 
         $("#nameInput").keyup(function () {
             const nameValue = $("#nameInput").val();
-            isNameDirty = validateInput(nameValue);
+            isNameDirty = isEmptyString(nameValue);
 
-            $("#nameCheck").toggle(isNameDirty);
+            $("#errorMessage").text("**Name is missing").toggle(isNameDirty);
             $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
         });
 
         $("#emailInput").keyup(function () {
             const emailValue = $("#emailInput").val();
-            isEmailDirty = validateEmail(emailValue);
+            isEmailDirty = isEmptyString(emailValue);
 
+            $("#errorMessage").text("**Email is missing").toggle(isEmailDirty);
             $("#saveButton").prop('disabled', isNameDirty || isEmailDirty);
         });
 
-        function validateInput(inputedValue) {
-            const isDirty = inputedValue == "";
-
-            return isDirty;
+        function isEmptyString(inputedValue) {
+            return inputedValue == "";
         }
 
-        function validateEmail(email) {
-            var membersData = @Html.Raw(Json.Encode(Model));
-            const isEmptyString = validateInput(email);
-            const isDuplicate = membersData.some((member) => {
-                isExistingEmail = email?.toLowerCase() === member.Email.toLowerCase();
-                isDifferentId = member.Id != activeDocumentId;
-
-                return isExistingEmail && isDifferentId;
-            });
-
-            $("#emailDuplicate").toggle(isDuplicate);
-            $("#emailCheck").toggle(isEmptyString);
-            return isEmptyString || isDuplicate;
-        }
     });
     $(document).on("click", ".edit-member-button", function () {
         $("#MemberForm").attr("action", "/Members/Edit/" + this.dataset.memberId);
